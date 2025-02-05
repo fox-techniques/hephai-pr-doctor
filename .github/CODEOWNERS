@@ -1,17 +1,14 @@
-# CODEOWNERS for HEPHAI-PR-doctor
-# All changes must be reviewed by the repository owner
+# CODEOWNERS for Public Repositories
+# Ensures that @fox-techniques reviews all critical changes
 
-# Global rule: All PRs require approval from @fox-techniques
-*               @fox-techniques
+# Global rule: All PRs must be reviewed by @fox-techniques
+* @fox-techniques
 
-# Assign PRs related to the GitHub Action
-action/*        @fox-techniques
+# Enforce review for all repository-wide changes
+** @fox-techniques
 
-# Assign PRs related to workflow files
-.github/workflows/*   @fox-techniques
+# Require review for direct pushes to main
+/main @fox-techniques
 
-# Assign PRs for documentation updates
-README.md       @fox-techniques
-
-# Enforce review for all repository changes
-**              @fox-techniques
+# Require review for tag creation
+/refs/tags/* @fox-techniques
