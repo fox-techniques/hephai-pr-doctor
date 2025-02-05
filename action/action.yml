@@ -1,0 +1,16 @@
+name: "HEPHAI-PR-doctor"
+description: "AI-powered PR review and automated test generation for Python & JavaScript."
+author: "FOX Techniques <ali.nabbi@fox-technique.com>"
+inputs:
+  github_token:
+    description: "GitHub token for authentication"
+    required: true
+  openai_api_key:
+    description: "OpenAI API key for AI-based review and test generation"
+    required: true
+runs:
+  using: "docker"
+  image: "Dockerfile"
+branding:
+  icon: "check-circle"
+  color: "blue"

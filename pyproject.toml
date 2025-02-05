@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "hephai-pr-doctor"
+version = "0.1.0"
+description = "AI-powered PR review and automated test generation for Python & JavaScript"
+authors = ["FOX Techniques <ali.nabbi@fox-techniques.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+github = "^1.2.6"
+requests = "^2.31.0"
+openai = "^1.2.3"
+pytest = "^7.4.3"
+
+[tool.poetry.scripts]
+hephai-pr-doctor = "action.main:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
