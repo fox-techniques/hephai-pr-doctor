@@ -1,0 +1,32 @@
+{
+  "action": "opened",
+  "pull_request": {
+    "number": 42,
+    "title": "Fix bug in authentication",
+    "body": "This PR fixes a security issue with JWT token validation.",
+    "changed_files": 3,
+    "additions": 50,
+    "deletions": 10,
+    "base": {
+      "repo": {
+        "full_name": "yourusername/hephai-pr-doctor"
+      }
+    },
+    "files": [
+      {"filename": "src/utils.py"},
+      {"filename": "src/auth.py"},
+      {"filename": "tests/test_auth.py"}
+    ],
+    "user": {
+      "login": "contributor123"
+    },
+    "html_url": "https://github.com/yourusername/hephai-pr-doctor/pull/42"
+  },
+  "repository": {
+    "full_name": "yourusername/hephai-pr-doctor",
+    "name": "hephai-pr-doctor",
+    "owner": {
+      "login": "yourusername"
+    }
+  }
+}

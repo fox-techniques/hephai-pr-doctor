@@ -1,21 +1,42 @@
 [tool.poetry]
 name = "hephai-pr-doctor"
-version = "0.1.0"
-description = "AI-powered PR review and automated test generation for Python & JavaScript"
+version = "1.0.0"
+description = "AI-powered GitHub Action for PR reviews, automated testing, and test generation."
 authors = ["FOX Techniques <ali.nabbi@fox-techniques.com>"]
-license = "Apache-2.0"
+license = "MIT"
 readme = "README.md"
+repository = "https://github.com/fox-techniques/hephai-pr-doctor"
+homepage = "https://github.com/fox-techniques/hephai-pr-doctor"
+keywords = ["github-action", "AI", "PR review", "code quality", "test generation"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-github = "^1.2.6"
-requests = "^2.31.0"
-openai = "^1.2.3"
-pytest = "^7.4.3"
+openai = "^1.2.3"  # AI-powered test case suggestions
+pytest = "^7.4.0"  # Unit testing framework
+pytest-cov = "^4.1.0"  # Test coverage reporting
+hypothesis = "^6.82.0"  # Property-based testing
+flake8 = "^6.0.0"  # Linting
+mypy = "^1.5.1"  # Static type checking
+mutmut = "^2.4.0"  # Mutation testing
+requests = "^2.31.0"  # GitHub API interactions
+coloredlogs = "^15.0.1"
+python-json-logger = "^3.2.1"
+python-dotenv = "^1.0.1"
 
-[tool.poetry.scripts]
-hephai-pr-doctor = "action.main:main"
+[tool.poetry.dev-dependencies]
+black = "^23.10.0"  # Code formatter
+isort = "^5.12.0"  # Imports sorting
+pre-commit = "^3.5.0"  # Pre-commit hooks
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "--cov=hephai_pr_doctor --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
