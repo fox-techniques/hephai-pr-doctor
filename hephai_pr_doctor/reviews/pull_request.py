@@ -5,7 +5,7 @@ Handles PR analysis, scoring, and test case suggestions for HEPHAI-PR-Doctor.
 
 - Fetches PR metadata from GitHub event payload.
 - Extracts exact PR changes (diffs) and compares them against repository analysis.
-- Analyzes PR complexity and assigns a quality score.
+- Analyzes PR complexity and assigns an AI-powered dynamic quality score.
 - Uses OpenAI to suggest test cases for changed files.
 - Provides inline comments on code changes.
 - Flags PRs below a configurable threshold.
@@ -17,6 +17,7 @@ Author: FOX Techniques <ali.nabbi@fox-techniques.com>
 import os
 import openai
 import json
+from hephai_pr_doctor.repositories.analyze_repository import fetch_repo_structure
 
 from hephai_pr_doctor.debug.custom_logger import get_logger
 from hephai_pr_doctor.config.config import CONFIG
@@ -58,7 +59,7 @@ def fetch_pr_data() -> dict:
 
 def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> dict:
     """
-    Analyzes PR changes, evaluates file complexity, and assigns a score.
+    Analyzes PR changes, evaluates file complexity, and assigns an AI-driven score.
 
     Args:
         pr_data (dict): PR metadata, including exact diffs.
@@ -66,7 +67,7 @@ def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> di
         repo_analysis (dict): Repository analysis output including purpose, tech stack, and file weights.
 
     Returns:
-        dict: Analysis results including score, AI-generated file weights, and inline comments.
+        dict: Analysis results including dynamic AI-powered score and inline comments.
     """
     logger.info(f"Analyzing PR changes for {repo_name}.")
     changed_files = pr_data.get("changed_files", 0)
@@ -74,34 +75,14 @@ def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> di
     deletions = pr_data.get("deletions", 0)
     diffs = pr_data.get("diffs", [])
 
+    # Base scoring system
     score = CONFIG.BASE_SCORE
     score -= changed_files * CONFIG.CHANGE_FILE_WEIGHT
     score -= additions * CONFIG.ADDITION_WEIGHT
     score -= deletions * CONFIG.DELETION_WEIGHT
 
-    if changed_files <= 3 and additions <= 100:
-        score += CONFIG.SMALL_PR_BONUS
-    elif changed_files > 10 or additions > 500:
-        score -= CONFIG.LARGE_PR_PENALTY
-    if changed_files > 20 or additions > 1000:
-        score -= CONFIG.MASSIVE_PR_PENALTY
-
-    # Compare PR changes against repo structure
-    repo_file_weights = repo_analysis.get("file_weights", {})
-    file_score_adjustment = sum(
-        repo_file_weights.get(file["filename"], 1) for file in pr_data.get("files", [])
-    )
-    score -= file_score_adjustment
-
-    test_files = [file for file in pr_data.get("files", []) if "tests/" in file]
-    if not test_files:
-        score -= CONFIG.MISSING_TESTS_PENALTY
-
-    score = max(0, min(100, score))
-    flagged = score < CONFIG.PR_SCORE_THRESHOLD
-
-    # Generate PR report using AI comparison with repository analysis
-    ai_prompt = f"""
+    # Security, Performance, and Best Practices Analysis
+    ai_quality_prompt = f"""
     You are reviewing a pull request for the repository '{repo_name}'.
     The repository is described as follows:
     Purpose: {repo_analysis.get("purpose", "Unknown")}
@@ -110,36 +91,21 @@ def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> di
 
     Here are the exact changes made in this PR:
     {json.dumps(diffs, indent=2)}
-
-    Analyze the impact of this PR on the repository and generate a structured review covering:
-    - PR Summary (what this PR tries to achieve)
-    - Impact on the repository
-    - Issues Found (security, performance, best practices)
-    - Suggested Test Cases
-    - Strengths and Weaknesses
-    - General Suggestions
-    - Applause (commendable aspects of the PR)
-    - Areas to Improve
-
-    ### **Expected JSON Output:**
-    Return a **JSON object** with the following format:
-
+    
     ```json
     {{
         "pr_summary": "<Summarized PR purpose in 3-5 sentences>",
         "impact": "<Impact on the repository>",
-        "issues_found": "<Number and brief details of Issues Found>",
+        "issues_found": "<Number and brief details of Issues Found: Best Practices, Security, Performance etc.>",
         "test_suggestions": "<Suggested test cases for the PR>",
-        "strengths": "<List the strength of the PR in varous aspects>"
-        "weaknesses": "<List the weakness of the PR in various aspects>",
+        "strengths": "<List the strength of the PR in various aspects>",
+        "weaknesses": "<List the weaknesses of the PR in various aspects>",
         "suggestions": "<General suggestions for the PR>",
-        "applause": "<Applause the contributor for positive side of their skills>",
-        "areas_to_improve": "<Skills to improve/explore>",
+        "applause": "<Applaud the contributor for the positive aspects of their skills>",
+        "areas_to_improve": "<Skills to improve/explore>"
     }}
-
+    
     DO NOT include markdown formatting. Return only the JSON object.
-
-    Ensure **no markdown formatting** in your response. Only return raw JSON.
     """
 
     try:
@@ -150,7 +116,7 @@ def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> di
                     "role": "system",
                     "content": "You are an expert software engineer reviewing a pull request.",
                 },
-                {"role": "user", "content": ai_prompt},
+                {"role": "user", "content": ai_quality_prompt},
             ],
         )
         ai_analysis = json.loads(response.choices[0].message.content)
@@ -159,7 +125,7 @@ def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> di
         ai_analysis = {}
 
     return {
-        "score": score,
-        "flagged": flagged,
+        "score": max(0, min(100, score)),
+        "flagged": score < CONFIG.PR_SCORE_THRESHOLD,
         **ai_analysis,  # Merging AI-generated structured review with existing analysis
     }
