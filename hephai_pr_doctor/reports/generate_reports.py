@@ -3,38 +3,46 @@ from hephai_pr_doctor.debug.custom_logger import get_logger
 logger = get_logger("hephai_action_logger")
 
 
-def generate_pr_report(analysis_result: dict) -> str:
+def generate_markdown_report(analysis_result: dict, is_pr_mode: bool) -> str:
     """
-    Generates a markdown report summarizing PR analysis.
+    Generates a markdown report summarizing repository or PR analysis.
 
     Args:
-        analysis_result (dict): PR analysis results.
+        analysis_result (dict): Analysis results (repository or PR).
+        is_pr_mode (bool): Whether the report is for a PR or standalone repo analysis.
 
     Returns:
-        str: Markdown formatted PR report.
+        str: Markdown formatted report.
     """
-    return f"""
-# 🏆 Scoreboard
+    title = "# 🏆 Scoreboard\n"
+    if is_pr_mode:
+        title += "\n- **Total PR Score:** {analysis_result.get('score', 'N/A')}/100"
 
-- **Total PR Score:** {analysis_result['score']}/100
+    file_weights_section = ""
+    if not is_pr_mode:
+        file_weights = analysis_result.get("file_weights", {})
+        file_weights_section = "\n## 📂 File Weights & Importance\n"
+        for file, weight in file_weights.items():
+            file_weights_section += f"- `{file}`: Weight {weight}\n"
+
+    return f"""
+{title}
+
 - **Best Practices Score:** {analysis_result.get('best_practices_score', 'N/A')}/10
 - **Security Score:** {analysis_result.get('security_score', 'N/A')}/10
 - **Performance Score:** {analysis_result.get('performance_score', 'N/A')}/10
 - **Privacy Score:** {analysis_result.get('privacy_score', 'N/A')}/10
 
-## 🚀 PR Summary
+## 🚀 {"PR Summary" if is_pr_mode else "Repository Overview"}
 
-### What PR Tries to Achieve
-{analysis_result.get('pr_summary', 'No summary available.')}
+### {"What PR Tries to Achieve" if is_pr_mode else "Repository Purpose"}
+{analysis_result.get('pr_summary' if is_pr_mode else 'purpose', 'No summary available.')}
 
-## 💡 Impact on the Project
-{analysis_result.get('impact', 'No impact analysis available.')}
+## 💡 {"Impact on the Project" if is_pr_mode else "Key Components"}
+{analysis_result.get('impact' if is_pr_mode else 'key_components', 'No impact analysis available.')}
 
 ## 🔍 Issues Found
 {analysis_result.get('issues_found', 'No issues detected.')}
-
-## 🧪 Suggested Test Cases
-{analysis_result.get('test_suggestions', 'No test cases suggested.')}
 
 ## 📝 General Suggestions
 {analysis_result.get('suggestions', 'No suggestions provided.')}
@@ -50,4 +58,5 @@ def generate_pr_report(analysis_result: dict) -> str:
 
 ## 📈 Areas to Improve
 {analysis_result.get('areas_to_improve', 'No improvement areas identified.')}
+{file_weights_section}
 """
