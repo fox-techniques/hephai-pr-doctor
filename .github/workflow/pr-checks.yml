@@ -1,0 +1,142 @@
+name: PR Checks
+
+on: pull_request
+
+jobs:
+  linting:
+    name: Linting & Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Python Dependencies
+        run: |
+          pip install flake8 black
+
+      - name: Run Flake8 (Linting)
+        run: flake8 src/
+
+      - name: Run Black (Code Formatting)
+        run: black --check src/
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Node Dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npx eslint "src/**/*.{js,ts,tsx}"
+
+      - name: Run Prettier
+        run: npx prettier --check "src/**/*.{js,ts,tsx}"
+
+  type-checking:
+    name: Type Checking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install MyPy
+        run: pip install mypy
+
+      - name: Run MyPy (Python Type Check)
+        run: mypy src/
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Run TypeScript Compiler (tsc)
+        run: npx tsc --noEmit
+
+  security:
+    name: Security Scans
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit (Python Security Scan)
+        run: bandit -r src/
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Run npm audit (Security Check)
+        run: npm audit --audit-level=high
+
+  tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Test Dependencies
+        run: |
+          pip install pytest pytest-cov
+
+      - name: Run Pytest with Coverage
+        run: pytest --cov=src --cov-fail-under=80
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Run Jest (JavaScript/TypeScript Tests)
+        run: npm test -- --coverage
+
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Ensure Python Code Compiles
+        run: python -m compileall src/
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Run npm build
+        run: npm run build

@@ -1,5 +1,5 @@
-from .generate_reports import generate_pr_report
+from .generate_reports import generate_markdown_report
 
 __all__ = [
-    "generate_pr_report",
+    "generate_markdown_report",
 ]

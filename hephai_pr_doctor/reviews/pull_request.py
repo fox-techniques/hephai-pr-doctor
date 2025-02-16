@@ -10,6 +10,7 @@ Handles PR analysis, scoring, and test case suggestions for HEPHAI-PR-Doctor.
 - Provides inline comments on code changes.
 - Flags PRs below a configurable threshold.
 - Generates a detailed review report based on PR modifications.
+- Ensures PR scoring adapts based on repository analysis.
 
 Author: FOX Techniques <ali.nabbi@fox-techniques.com>
 """
@@ -17,11 +18,10 @@ Author: FOX Techniques <ali.nabbi@fox-techniques.com>
 import os
 import openai
 import json
-from hephai_pr_doctor.repositories.analyze_repository import fetch_repo_structure
-
+import requests
+from hephai_pr_doctor.repositories.analyze_repository import analyze_repo_with_ai
 from hephai_pr_doctor.debug.custom_logger import get_logger
 from hephai_pr_doctor.config.config import CONFIG
-import requests
 
 logger = get_logger("hephai_action_logger")
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -57,31 +57,22 @@ def fetch_pr_data() -> dict:
         return {}
 
 
-def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> dict:
+def analyze_pr_changes(pr_data: dict, repo_name: str) -> dict:
     """
-    Analyzes PR changes, evaluates file complexity, and assigns an AI-driven score.
+    Analyzes PR changes, compares them to the repository, and assigns an AI-powered score.
 
     Args:
         pr_data (dict): PR metadata, including exact diffs.
         repo_name (str): Repository name.
-        repo_analysis (dict): Repository analysis output including purpose, tech stack, and file weights.
 
     Returns:
-        dict: Analysis results including dynamic AI-powered score and inline comments.
+        dict: Analysis results including AI-powered score and inline comments.
     """
     logger.info(f"Analyzing PR changes for {repo_name}.")
-    changed_files = pr_data.get("changed_files", 0)
-    additions = pr_data.get("additions", 0)
-    deletions = pr_data.get("deletions", 0)
-    diffs = pr_data.get("diffs", [])
+    repo_analysis = analyze_repo_with_ai(
+        fetch_repo_structure(repo_name), repo_name, pr_data
+    )
 
-    # Base scoring system
-    score = CONFIG.BASE_SCORE
-    score -= changed_files * CONFIG.CHANGE_FILE_WEIGHT
-    score -= additions * CONFIG.ADDITION_WEIGHT
-    score -= deletions * CONFIG.DELETION_WEIGHT
-
-    # Security, Performance, and Best Practices Analysis
     ai_quality_prompt = f"""
     You are reviewing a pull request for the repository '{repo_name}'.
     The repository is described as follows:
@@ -90,10 +81,14 @@ def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> di
     File Weights: {repo_analysis.get("file_weights", {})}
 
     Here are the exact changes made in this PR:
-    {json.dumps(diffs, indent=2)}
+    {json.dumps(pr_data.get('diffs', []), indent=2)}
     
     ```json
     {{
+        "best_practices_score": {repo_analysis.get('best_practices_score', 'N/A')},
+        "security_score": {repo_analysis.get('security_score', 'N/A')},
+        "performance_score": {repo_analysis.get('performance_score', 'N/A')},
+        "privacy_score": {repo_analysis.get('privacy_score', 'N/A')},
         "pr_summary": "<Summarized PR purpose in 3-5 sentences>",
         "impact": "<Impact on the repository>",
         "issues_found": "<Number and brief details of Issues Found: Best Practices, Security, Performance etc.>",
@@ -125,7 +120,7 @@ def analyze_pr_changes(pr_data: dict, repo_name: str, repo_analysis: dict) -> di
         ai_analysis = {}
 
     return {
-        "score": max(0, min(100, score)),
-        "flagged": score < CONFIG.PR_SCORE_THRESHOLD,
+        "score": max(0, min(100, CONFIG.BASE_SCORE)),
+        "flagged": CONFIG.BASE_SCORE < CONFIG.PR_SCORE_THRESHOLD,
         **ai_analysis,  # Merging AI-generated structured review with existing analysis
     }
