@@ -20,10 +20,10 @@ jobs:
           pip install flake8 black
 
       - name: Run Flake8 (Linting)
-        run: flake8 src/
+        run: flake8 . --exclude .git,__pycache__,venv,logs
 
       - name: Run Black (Code Formatting)
-        run: black --check src/
+        run: black --check .
 
       - name: Set Up Node.js
         uses: actions/setup-node@v4
@@ -34,10 +34,10 @@ jobs:
         run: npm install
 
       - name: Run ESLint
-        run: npx eslint "src/**/*.{js,ts,tsx}"
+        run: npx eslint "**/*.{js,ts,tsx}"
 
       - name: Run Prettier
-        run: npx prettier --check "src/**/*.{js,ts,tsx}"
+        run: npx prettier --check "**/*.{js,ts,tsx}"
 
   type-checking:
     name: Type Checking
@@ -55,7 +55,7 @@ jobs:
         run: pip install mypy
 
       - name: Run MyPy (Python Type Check)
-        run: mypy src/
+        run: mypy .
 
       - name: Set Up Node.js
         uses: actions/setup-node@v4
@@ -81,7 +81,7 @@ jobs:
         run: pip install bandit
 
       - name: Run Bandit (Python Security Scan)
-        run: bandit -r src/
+        run: bandit -r .
 
       - name: Set Up Node.js
         uses: actions/setup-node@v4
@@ -108,7 +108,7 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Run Pytest with Coverage
-        run: pytest --cov=src --cov-fail-under=80
+        run: pytest --cov=. --cov-fail-under=80
 
       - name: Set Up Node.js
         uses: actions/setup-node@v4
@@ -131,7 +131,7 @@ jobs:
           python-version: "3.10"
 
       - name: Ensure Python Code Compiles
-        run: python -m compileall src/
+        run: python -m compileall .
 
       - name: Set Up Node.js
         uses: actions/setup-node@v4
