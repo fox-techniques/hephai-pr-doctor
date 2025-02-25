@@ -20,6 +20,7 @@ import openai
 import json
 import requests
 from hephai_pr_doctor.repositories.analyze_repository import analyze_repo_with_ai
+from hephai_pr_doctor.repositories.fetch_repository import fetch_repo_structure
 from hephai_pr_doctor.debug.custom_logger import get_logger
 from hephai_pr_doctor.config.config import CONFIG
 
@@ -69,9 +70,8 @@ def analyze_pr_changes(pr_data: dict, repo_name: str) -> dict:
         dict: Analysis results including AI-powered score and inline comments.
     """
     logger.info(f"Analyzing PR changes for {repo_name}.")
-    repo_analysis = analyze_repo_with_ai(
-        fetch_repo_structure(repo_name), repo_name, pr_data
-    )
+    repo_structure = fetch_repo_structure(repo_name)
+    repo_analysis = analyze_repo_with_ai(repo_structure, repo_name, pr_data)
 
     ai_quality_prompt = f"""
     You are reviewing a pull request for the repository '{repo_name}'.

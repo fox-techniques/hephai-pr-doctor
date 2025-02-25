@@ -23,7 +23,7 @@ def generate_markdown_report(analysis_result: dict, is_pr_mode: bool) -> str:
         file_weights = analysis_result.get("file_weights", {})
         file_weights_section = "\n## 📂 File Weights & Importance\n"
         for file, weight in file_weights.items():
-            file_weights_section += f"- `{file}`: Weight {weight}\n"
+            file_weights_section += f"- `{file}`: {weight}\n"
 
     return f"""
 {title}
